@@ -111,7 +111,7 @@ check_status(){
 
 stable_Download() {
 	echo -e "${Info} 正在请求下载 Snell Server ……"
-	wget --no-check-certificate -N "https://dl.nssurge.com/snell/snell-server-v4.0.1-linux-${arch}.zip"
+	wget --no-check-certificate -N "https://dl.nssurge.com/snell/snell-server-v4.1.0rc1-linux-${arch}.zip"
 	if [[ ! -e "snell-server-v4.0.1-linux-${arch}.zip" ]]; then
 		echo -e "${Error} Snell Server  下载失败！"
 		return 1 && exit 1
