@@ -110,14 +110,6 @@ check_status(){
 	status=`systemctl status snell-server | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1`
 }
 
-check_new_ver(){
-	new_ver=$(wget -qO- https://api.github.com/repos/surge-networks/snell/releases| jq -r '[.[] | select(.prerelease == false) | select(.draft == false) | .tag_name] | .[0]')
-	[[ -z ${new_ver} ]] && echo -e "${Error} Snell Server 最新版本获取失败！" 
-	new_ver="v3.0.1"
-	echo -e "${Info} 官方源获取版本失败，请求备用源最新版本为 [ ${new_ver} ]"
-	echo -e "${Info} 检测到 Snell 最新版本为 [ ${new_ver} ]"
-}
-
 check_ver_comparison(){
 	now_ver=$(cat ${Now_ver_File})
 	if [[ "${now_ver}" != "${new_ver}" ]]; then
