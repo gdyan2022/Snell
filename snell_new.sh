@@ -10,6 +10,7 @@ export PATH
 #=================================================
 
 sh_ver="1.4.9"
+surge_ver="4.1.0"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/snell/"
@@ -109,24 +110,51 @@ check_status(){
 	status=`systemctl status snell-server | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1`
 }
 
+check_new_ver(){
+	new_ver=$(wget -qO- https://api.github.com/repos/surge-networks/snell/releases| jq -r '[.[] | select(.prerelease == false) | select(.draft == false) | .tag_name] | .[0]')
+	[[ -z ${new_ver} ]] && echo -e "${Error} Snell Server 最新版本获取失败！" 
+	new_ver="v3.0.1"
+	echo -e "${Info} 官方源获取版本失败，请求备用源最新版本为 [ ${new_ver} ]"
+	echo -e "${Info} 检测到 Snell 最新版本为 [ ${new_ver} ]"
+}
+
+check_ver_comparison(){
+	now_ver=$(cat ${Now_ver_File})
+	if [[ "${now_ver}" != "${new_ver}" ]]; then
+		echo -e "${Info} 发现 Snell Server 已有新版本 [ ${new_ver} ]，旧版本 [ ${now_ver} ]"
+		read -e -p "是否更新 ? [Y/n] :" yn
+		[[ -z "${yn}" ]] && yn="y"
+		if [[ $yn == [Yy] ]]; then
+			check_status
+			# [[ "$status" == "running" ]] && systemctl stop snell-server
+			\cp "${CONF}" "/tmp/config.conf"
+			Download
+			mv -f "/tmp/config.conf" "${CONF}"
+			Restart
+		fi
+	else
+		echo -e "${Info} 当前 Snell Server 已是最新版本 [ ${new_ver} ]" && exit 1
+	fi
+}
+
 stable_Download() {
 	echo -e "${Info} 正在请求下载 Snell Server ……"
-	wget --no-check-certificate -N "https://dl.nssurge.com/snell/snell-server-v4.1.0-linux-${arch}.zip"
-	if [[ ! -e "snell-server-v4.0.1-linux-${arch}.zip" ]]; then
+	wget --no-check-certificate -N "https://dl.nssurge.com/snell/snell-server-v${surge_ver}-linux-${arch}.zip"
+	if [[ ! -e "snell-server-v${surge_ver}-linux-${arch}.zip" ]]; then
 		echo -e "${Error} Snell Server  下载失败！"
 		return 1 && exit 1
 	else
-		unzip -o "snell-server-v4.0.1-linux-${arch}.zip"
+		unzip -o "snell-server-v${surge_ver}-linux-${arch}.zip"
 	fi
 	if [[ ! -e "snell-server" ]]; then
 		echo -e "${Error} Snell Server  解压失败 !"
 		echo -e "${Error} Snell Server  安装失败 !"
 		return 1 && exit 1
 	else
-		rm -rf "snell-server-v4.0.1-linux-${arch}.zip"
+		rm -rf "snell-server-v${surge_ver}-linux-${arch}.zip"
 		chmod +x snell-server
 		mv -f snell-server "${FILE}"
-		echo "v4.0.1" > ${Now_ver_File}
+		echo "v${surge_ver}" > ${Now_ver_File}
 		echo -e "${Info} Snell Server 主程序下载安装完毕！"
 		return 0
 	fi
@@ -463,9 +491,13 @@ Restart(){
     start_menu
 }
 Update(){
-	check_installed_status
+	# check_installed_status
+	# check_new_ver
+	# check_ver_comparison
+	echo -e "${Info} 开始下载/安装..."
 	check_new_ver
-	check_ver_comparison
+	Download
+	systemctl restart snell-server
 	echo -e "${Info} Snell Server 更新完毕 !"
     sleep 3s
     start_menu
@@ -553,17 +585,18 @@ Snell Server 管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
 ==============================
 ——————————————————————————————
  ${Green_font_prefix} 1.${Font_color_suffix} 安装 Snell Server${Yellow_font_prefix}[v4]${Font_color_suffix}
- ${Green_font_prefix} 2.${Font_color_suffix} 卸载 Snell Server
+ ${Green_font_prefix} 2.${Font_color_suffix} 更新 Snell Server
+ ${Green_font_prefix} 3.${Font_color_suffix} 卸载 Snell Server
 ——————————————————————————————
- ${Green_font_prefix} 3.${Font_color_suffix} 启动 Snell Server
- ${Green_font_prefix} 4.${Font_color_suffix} 停止 Snell Server
- ${Green_font_prefix} 5.${Font_color_suffix} 重启 Snell Server
+ ${Green_font_prefix} 4.${Font_color_suffix} 启动 Snell Server
+ ${Green_font_prefix} 5.${Font_color_suffix} 停止 Snell Server
+ ${Green_font_prefix} 6.${Font_color_suffix} 重启 Snell Server
 ——————————————————————————————
- ${Green_font_prefix} 6.${Font_color_suffix} 设置 配置信息
- ${Green_font_prefix} 7.${Font_color_suffix} 查看 配置信息
- ${Green_font_prefix} 8.${Font_color_suffix} 查看 运行状态
+ ${Green_font_prefix} 7.${Font_color_suffix} 设置 配置信息
+ ${Green_font_prefix} 8.${Font_color_suffix} 查看 配置信息
+ ${Green_font_prefix} 9.${Font_color_suffix} 查看 运行状态
 ——————————————————————————————
- ${Green_font_prefix} 9.${Font_color_suffix} 退出脚本
+ ${Green_font_prefix} 0.${Font_color_suffix} 退出脚本
 ==============================" && echo
 	if [[ -e ${FILE} ]]; then
 		check_status
@@ -582,31 +615,34 @@ Snell Server 管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
 		Install
 		;;
 		2)
-		Uninstall
+		Update
 		;;
 		3)
-		Start
+		Uninstall
 		;;
 		4)
-		Stop
+		Start
 		;;
 		5)
-		Restart
+		Stop
 		;;
 		6)
-		Set
+		Restart
 		;;
 		7)
-		View
+		Set
 		;;
 		8)
-		Status
+		View
 		;;
 		9)
+		Status
+		;;
+		0)
 		exit 1
 		;;
 		*)
-		echo "请输入正确数字 [1-9]"
+		echo "请输入正确数字 [0-9]"
 		;;
 	esac
 }
