@@ -491,7 +491,7 @@ Update(){
 	Download
 	systemctl restart snell-server
 	echo -e "${Info} Snell Server 更新完毕 !"
-    sleep 3s
+    sleep 1s
     start_menu
 }
 Uninstall(){
