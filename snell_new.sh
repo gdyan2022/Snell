@@ -9,8 +9,8 @@ export PATH
 #	WebSite: https://surge.tel
 #=================================================
 
-sh_ver="1.4.9"
-surge_ver="4.1.0"
+sh_ver="1.5.0_gdyan"
+surge_ver="4.1.1"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/snell/"
