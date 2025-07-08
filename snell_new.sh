@@ -10,7 +10,7 @@ export PATH
 #=================================================
 
 sh_ver="1.5.0_gdyan"
-surge_ver="5.0.0b1"
+surge_ver="5.0.0b3"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/snell/"
