@@ -9,8 +9,9 @@ export PATH
 #	WebSite: https://surge.tel
 #=================================================
 
-sh_ver="1.5.0_gdyan"
-surge_ver="5.0.0b3"
+sh_ver="2.0.0_gdyan"
+# surge_ver="5.0.0b3"
+surge_ver=$(curl -s https://raw.githubusercontent.com/gdyan2022/sth/main/ver.txt | sed 's/^v//')
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/snell/"
